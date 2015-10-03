@@ -1,0 +1,155 @@
+1、Git 提供了一个叫做git config的工具（译注：实际是git-config 命令，只不过可以通过 git 加一个名字来呼叫此命令。），专门用来配置或读取相应的工作环境变量。而正是由这些环境变量，决定了 Git 在各个环节的具体工作方式和行为。这些变量可以存放在以下三个不同的地方：
+    /etc/gitconfig 文件：系统中对所有用户都普遍适用的配置。若使用 git config 时用 --system 选项，读写的就是这个文件。
+    ~/.gitconfig 文件：用户目录下的配置文件只适用于该用户。若使用 git config 时用 --global 选项，读写的就是这个文件。
+    当前项目的 Git 目录中的配置文件（也就是工作目录中的 .git/config 文件）：这里的配置仅仅针对当前项目有效。每一个级别的配置都会覆盖上层的相同配置，所以 .git/config 里的配置会覆盖 /etc/gitconfig 中的同名变量。
+	git config --global user.name "John Doe"
+	git config --global user.email johndoe@example.com
+	git config --global core.editor emacs	//修改默认文本编辑器
+	git config --global merge.tool vimdiff	//在解决合并冲突时使用vimdiff差异分析工具 
+	git help <verb> /git <verb> --help /man git-<verb>	//获取帮助
+如果用了 --global 选项，那么更改的配置文件就是位于你用户主目录下的那个，以后你所有的项目都会默认使用这里配置的用户信息。如果要在某个特定的项目中使用其他名字或者电邮，只要去掉 --global 选项重新配置即可，新的设定保存在当前项目的 .git/config 文件里。
+2、要检查已有的配置信息，可以使用 git config --list 命令
+   有时候会看到重复的变量名，那就说明它们来自不同的配置文件（比如 /etc/gitconfig 和 ~/.gitconfig），不过最终 Git 实际采用的是最后一个。
+   也可以直接查阅某个环境变量的设定，只要把特定的名字跟在后面即可 git config user.name
+3、取得Git项目仓库的方法：
+	1>在现存的目录下，通过导入所有文件来创建新的Git仓库
+		在项目所在目录中，执行git init初始化
+		git add 文件名	//添加要纳入版本控制的文件
+		git commit -m 'initial project version'	//提交
+	 2>从已有的Git仓库克隆出一个新的镜像仓库
+		git clone [url]	//克隆仓库的命令格式 
+			eg:git clone git://github.com/schacon/grit.git
+			这会在当前目录下创建一个名为grit的目录，其中包含一个 .git 的目录，用于保存下载下来的所有版本记录，然后从中取出最新版本的文件拷贝。如果进入这个新建的 grit 目录，你会看到项目中的所有文件已经在里边了，准备好后续的开发和使用。如果希望在克隆的时候，自己定义要新建的项目目录名称，可以在上面的命令末尾指定新的名字：git clone git://github.com/schacon/grit.git mygrit 唯一的差别就是，现在新建的目录成了 mygrit，其他的都和之前的一样。
+4、git status	//检查当前文件状态
+   git add 文件名/目录名	//跟踪新文件，这是个多功能命令，根据目标文件的状态不同，此命令的效果也不同：可以用它开始跟踪新文件，或者把已跟踪的文件放到暂存区，还能用于合并时把有冲突的文件标记为已解决状态等
+   创建一个名为 .gitignore 的文件，列出要忽略的文件模式  eg:.gitignore文件中写入 *.[oa]//忽略.o或.a文件
+	文件 .gitignore 的格式规范如下：
+	    所有空行或者以注释符号 ＃ 开头的行都会被 Git 忽略。
+	    可以使用标准的 glob 模式匹配。
+	    匹配模式最后跟反斜杠（/）说明要忽略的是目录。
+	    要忽略指定模式以外的文件或目录，可以在模式前加上惊叹号（!）取反。
+	eg:# 此为注释 – 将被 Git 忽略
+	   # 忽略所有 .a 结尾的文件
+	   *.a
+	   # 但 lib.a 除外
+	   !lib.a
+	   # 仅仅忽略项目根目录下的 TODO 文件，不包括 subdir/TODO
+	   /TODO
+	   # 忽略 build/ 目录下的所有文件
+	   build/
+	   # 会忽略 doc/notes.txt 但不包括 doc/server/arch.txt
+	   doc/*.txt
+	   # ignore all .txt files in the doc/ directory
+	   doc/**/*.txt
+   git diff	//比较的是工作目录中当前文件和暂存区域快照之间的差异，也就是修改之后还没有暂存起来的变化内容。
+   git diff --cached/--staged	//已经暂存起来的文件和上次提交的快照之间的差异
+   git commit	//提交更新到仓库 会先启动文本编辑器以便输入本次提交的说明，#开头的为注释，Git 会丢掉注释行，将说明内容和本次更新提交到仓库。
+	//也可以用 -m 参数后跟提交说明的方式，在一行命令中提交更新 eg:git commit -m "提交说明"
+	//跳过使用暂存区域，把所有已经跟踪过的文件暂存起来一并提交，从而跳过 git add 步骤 eg:git commit -a
+5、移除文件
+	git rm	//连带从工作目录中删除指定的文件，这样以后就不会出现在未跟踪文件清单中了
+		//如果删除之前修改过并且已经放到暂存区域的话，则必须要用强制删除选项 -f（译注：即 force 的首字母），以防误删除文件后丢失修改的内容。
+	git rm --cached	文件名/目录名	//把文件从 Git 仓库中删除（亦即从暂存区域移除），但仍然希望保留在当前工作目录中。换句话说，仅是从跟踪清单中删除。
+	eg:git rm \*~	//递归删除当前目录及其子目录中所有～结尾的文件 注意要使用\
+6、移动文件
+	git mv file_from file_to	//文件重命名
+7、在提交了若干更新之后，又或者克隆了某个项目，想回顾下提交历史，可以使用 git log 命令查看。
+  	--stat，仅显示简要的增改行数统计我们常用 -p 选项展开显示每次提交的内容差异，用 -2 则仅显示最近的两次更新
+	还有个常用的 --pretty 选项，可以指定使用完全不同于默认格式的方式展示提交历史。比如用 oneline 将每个提交放在一行显示，这在提交数很大时非常有用。
+	--format，可以定制要显示的记录格式，这样的输出便于后期编程提取分析
+		常用的格式占位符写法及其代表的意义。
+		%H 	提交对象（commit）的完整哈希字串
+		%h 	提交对象的简短哈希字串
+		%T 	树对象（tree）的完整哈希字串
+		%t 	树对象的简短哈希字串
+		%P 	父对象（parent）的完整哈希字串
+		%p 	父对象的简短哈希字串
+		%an 	作者（author）的名字
+		%ae 	作者的电子邮件地址
+		%ad 	作者修订日期（可以用 -date= 选项定制格式）
+		%ar 	作者修订日期，按多久以前的方式显示
+		%cn 	提交者(committer)的名字
+		%ce 	提交者的电子邮件地址
+		%cd 	提交日期
+		%cr 	提交日期，按多久以前的方式显示
+		%s 	提交说明
+	-p 	按补丁格式显示每个更新之间的差异。
+	--word-diff 	按 word diff 格式显示差异。
+	--stat 	显示每次更新的文件修改统计信息。
+	--shortstat 	只显示 --stat 中最后的行数修改添加移除统计。
+	--name-only 	仅在提交信息后显示已修改的文件清单。
+	--name-status 	显示新增、修改、删除的文件清单。
+	--abbrev-commit 	仅显示 SHA-1 的前几个字符，而非所有的 40 个字符。
+	--relative-date 	使用较短的相对时间显示（比如，“2 weeks ago”）。
+	--graph 	显示 ASCII 图形表示的分支合并历史。
+	--pretty 	使用其他格式显示历史提交信息。可用的选项包括 oneline，short，full，fuller 和 format（后跟指定格式）。
+	--oneline 	--pretty=oneline --abbrev-commit 的简化用法。
+	-(n) 	仅显示最近的 n 条提交
+	--since, --after 	仅显示指定时间之后的提交。
+	--until, --before 	仅显示指定时间之前的提交。
+	--author 	仅显示指定作者相关的提交。
+	--committer 	仅显示指定提交者相关的提交。
+	--all -match 	同时满足多个搜索的条件
+	图形化查看历史修改的工具 gitk
+8、撤消操作（不可逆）
+	git commit --amend 	//修改最后一次提交	可以添加文件 修改提交说明
+	git reset HEAD <file>	//撤消已暂存的文件
+9、远程仓库的使用
+	git remote 	//查看当前配置有哪些远程仓库，在克隆完某个项目后，至少可以看到一个名为 origin 的远程库，Git 默认使用这个名字来标识你所克隆的原始仓库
+			//可以加上 -v 选项（译注：此为 --verbose 的简写，取首字母），显示对应的克隆地址
+	git remote add [shortname] [url]	//添加一个远程仓库
+	git fetch [remote-name]		//从远程仓库抓取数据
+					//如果是克隆了一个仓库，此命令会自动将远程仓库归于 origin 名下。所以，git fetch origin 会抓取从你上次克隆以来别人上传到此远程仓库中的所有更新（或是上次 fetch 以来别人提交的更新）。有一点很重要，需要记住，fetch 命令只是将远端的数据拉到本地仓库，并不自动合并到当前工作分支，只有当你确实准备好了，才能手工合并。
+	如果设置了某个分支用于跟踪某个远端仓库的分支（参见下节及第三章的内容），可以使用 git pull 命令自动抓取数据下来，然后将远端分支自动合并到本地仓库中当前分支。
+	git push [remote-name] [branch-name]	//推送数据到远程仓库
+	git remote show [remote-name]		//查看某个远程仓库的详细信息
+	git remote rename	//修改某个远程仓库在本地的简称
+	git remote rm		//删除指定的远程仓库
+10、打标签
+	git tag		//列出现有标签	显示的标签按字母顺序排列，所以标签的先后并不表示重要程度的轻重。
+	git tag -a [标签名] -m '标签说明'	//创建一个含附注的标签
+	git show [标签名]	//查看相应标签的版本信息，并连同显示打标签时的提交对象
+	git tag -s [标签名]	//签署标签 需要私钥
+	git tag [标签名]	//创建轻量级标签 轻量级标签实际上就是一个保存着对应提交对象的校验和信息的文件
+				//查看此标签信息，就只有相应的提交对象摘要
+	git tag -v [tag-name]	//验证标签 需要有签署者的公钥，存放在 keyring 中
+	后期加注标签，只要在打标签的时候跟上对应提交对象的校验和（或前几位字符）即可 eg:git tag -a v1.2 9fceb02
+	git push origin [tagname]	//分享标签到远端仓库 默认情况下，git push并不把标签传到远端服务器上
+	git push origin --tags		//如一次推送所有本地新增的标签上去
+11、技巧
+	git config可以为命令设置别名eg:git config --global alias.ci commit 给commit设置别名ci 
+		要执行外部命令的话  命令前加！即可
+12、分支
+	git branch [分支名]	//创建一个新的分支
+	git checkout [分支名]	//切换到分支
+	由于 Git 中的分支实际上仅是一个包含所指对象校验和（40 个字符长度 SHA-1 字串）的文件，所以创建和销毁一个分支就变得非常廉价。
+	git checkout -b [分支名]	//相当于git branch [分支名] git checkout [分支名]
+	切换分支的时候最好保持一个清洁的工作区域。
+	git merge [分支名]	//合并分支  从当前分支合并到指定的分支 如果顺着一个分支走下去可以到达另一个分支的话，那么 Git 在合并两者时，只会简单地把指针右移，因为这种单线的历史分支不存在任何需要解决的分歧，所以这种合并过程可以称为快进（Fast forward）。
+	git branch -d [分支名]	//删除分支
+13、HEAD指向的版本就是当前版本，因此，Git允许我们在版本的历史之间穿梭，使用命令git reset --hard commit_id
+	穿梭前，用git log可以查看提交历史，以便确定要回退到哪个版本。
+	要重返未来，用git reflog查看命令历史，以便确定要回到未来的哪个版本。
+	每次修改，如果不add到暂存区，那就不会加入到commit中。
+14、git checkout -- readme.txt意思就是，把readme.txt文件在工作区的修改全部撤销，这里有两种情况：
+	一种是readme.txt自修改后还没有被放到暂存区，现在，撤销修改就回到和版本库一模一样的状态；
+	一种是readme.txt已经添加到暂存区后，又作了修改，现在，撤销修改就回到添加到暂存区后的状态。
+	总之，就是让这个文件回到最近一次git commit或git add时的状态。
+15、使用GitHub
+	1、创建SSH Key
+	ssh-keygen -t rsa -C "youremail@example.com"	//创建SSH Key
+	一路回车，使用默认值即可，由于这个Key也不是用于军事目的，所以也无需设置密码。
+	如果一切顺利的话，可以在用户主目录里找到.ssh目录，里面有id_rsa和id_rsa.pub两个文件，这两个就是SSH Key的秘钥对，id_rsa是私钥，不能泄露出去，id_rsa.pub是公钥，可以放心地告诉任何人。
+	2、登陆GitHub，打开“Account settings”，“SSH Keys”页面：
+	然后，点“Add SSH Key”，填上任意Title，在Key文本框里粘贴id_rsa.pub文件的内容
+	点“Add Key”，你就应该看到已经添加的Key：
+16、添加远程仓库
+	在本地的learngit仓库下运行命令：
+	git remote add origin git@github.com:[github用户名]/learngit.git	//添加后，远程库的名字就是origin，这是Git默认的叫法，也可以改成别的，但是origin这个名字一看就知道是远程库。
+	git push -u origin master	//把本地库的内容推送到远程，用git push命令，实际上是把当前分支master推送到远程。
+	//由于远程库是空的，我们第一次推送master分支时，加上了-u参数，Git不但会把本地的master分支内容推送的远程新的master分支，还会把本地的master分支和远程的master分支关联起来，在以后的推送或者拉取时就可以简化命令。
+	//从现在起，只要本地作了提交，就可以通过命令：git push origin master
+	//把本地master分支的最新修改推送至GitHub。
+	要关联一个远程库，使用命令git remote add origin git@server-name:path/repo-name.git
+	关联后，使用命令git push -u origin master第一次推送master分支的所有内容；
+	此后，每次本地提交后，只要有必要，就可以使用命令git push origin master推送最新修改；
